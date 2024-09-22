@@ -14,7 +14,7 @@ import (
 	kmapi "kmodules.xyz/client-go/api/v1"
 	cu "kmodules.xyz/client-go/client"
 	"kmodules.xyz/client-go/conditions"
-	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1alpha2"
+	dbapi "kubedb.dev/apimachinery/apis/kubedb/v1"
 	kubedbscheme "kubedb.dev/apimachinery/client/clientset/versioned/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
