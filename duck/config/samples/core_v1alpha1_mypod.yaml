@@ -1,0 +1,9 @@
+apiVersion: core.duck.dev/v1alpha1
+kind: MyPod
+metadata:
+  labels:
+    app.kubernetes.io/name: duck
+    app.kubernetes.io/managed-by: kustomize
+  name: mypod-sample
+spec:
+  # TODO(user): Add fields here

@@ -1,0 +1,23 @@
+# permissions for end users to view mypods.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: duck
+    app.kubernetes.io/managed-by: kustomize
+  name: mypod-viewer-role
+rules:
+- apiGroups:
+  - core.duck.dev
+  resources:
+  - mypods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - core.duck.dev
+  resources:
+  - mypods/status
+  verbs:
+  - get
