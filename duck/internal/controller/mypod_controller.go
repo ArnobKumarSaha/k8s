@@ -19,7 +19,13 @@ package controller
 import (
 	"context"
 	"fmt"
+	apps "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/klog/v2"
+	"kmodules.xyz/client-go/client/duck"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -47,21 +53,58 @@ type MyPodReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.18.2/pkg/reconcile
 func (r *MyPodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := log.FromContext(ctx)
 
-	var mp corev1alpha1.MyPod
-	err := r.Get(context.TODO(), req.NamespacedName, &mp)
-	if err != nil {
+	klog.Infof("Reconciling %v \n", req.NamespacedName)
+	var mypod corev1alpha1.MyPod
+	if err := r.Get(ctx, req.NamespacedName, &mypod); err != nil {
+		log.Error(err, "unable to fetch CronJob")
+		// we'll ignore not-found errors, since they can't be fixed by an immediate
+		// requeue (we'll need to wait for a new notification), and we can get them
+		// on deleted requests.
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	fmt.Printf("Reconciling %v \n", req.NamespacedName)
+	sel, err := metav1.LabelSelectorAsSelector(mypod.Spec.Selector)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	var pods corev1.PodList
+	err = r.List(context.TODO(), &pods,
+		client.InNamespace(mypod.Namespace),
+		client.MatchingLabelsSelector{Selector: sel})
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	for _, pod := range pods.Items {
+		fmt.Println(pod.Name)
+	}
 	return ctrl.Result{}, nil
+}
+
+func (r *MyPodReconciler) InjectClient(c client.Client) error {
+	r.Client = c
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *MyPodReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
+	return duck.ControllerManagedBy(mgr).
 		For(&corev1alpha1.MyPod{}).
-		Complete(r)
+		WithUnderlyingTypes(
+			ObjectOf(apps.SchemeGroupVersion.WithKind("Deployment")),
+			ObjectOf(apps.SchemeGroupVersion.WithKind("StatefulSet")),
+			ObjectOf(apps.SchemeGroupVersion.WithKind("DaemonSet")),
+		).
+		Complete(func() duck.Reconciler {
+			return new(MyPodReconciler)
+		})
+}
+
+func ObjectOf(gvk schema.GroupVersionKind) client.Object {
+	var u corev1alpha1.MyPod
+	u.GetObjectKind().SetGroupVersionKind(gvk)
+	return &u
 }
