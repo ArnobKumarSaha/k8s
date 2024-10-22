@@ -16,6 +16,7 @@ import (
 	coreutil "kmodules.xyz/client-go/core/v1"
 	kubedbscheme "kubedb.dev/apimachinery/client/clientset/versioned/scheme"
 	psapi "kubeops.dev/petset/apis/apps/v1"
+	skapi "kubeops.dev/sidekick/apis/apps/v1alpha1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
@@ -30,6 +31,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scm))
 	utilruntime.Must(kubedbscheme.AddToScheme(scm))
 	utilruntime.Must(psapi.AddToScheme(scm))
+	utilruntime.Must(skapi.AddToScheme(scm))
 }
 
 // var ps = `apiVersion: apps/v1
@@ -60,7 +62,7 @@ spec:
         resources: {}
   updateStrategy: {}`
 
-func main() {
+func _main() {
 	//var cur appsv1.StatefulSet
 	var cur psapi.PetSet
 	err := yaml.Unmarshal([]byte(ps), &cur)

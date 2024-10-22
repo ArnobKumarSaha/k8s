@@ -377,6 +377,16 @@ func (m *MSSQLServer) SetDefaults() {
 	m.SetHealthCheckerDefaults()
 
 	m.setDefaultContainerResourceLimits(m.Spec.PodTemplate)
+
+	m.Spec.Monitor.SetDefaults()
+	if m.Spec.Monitor != nil && m.Spec.Monitor.Prometheus != nil {
+		if m.Spec.Monitor.Prometheus.Exporter.SecurityContext.RunAsUser == nil {
+			m.Spec.Monitor.Prometheus.Exporter.SecurityContext.RunAsUser = mssqlVersion.Spec.SecurityContext.RunAsUser
+		}
+		if m.Spec.Monitor.Prometheus.Exporter.SecurityContext.RunAsGroup == nil {
+			m.Spec.Monitor.Prometheus.Exporter.SecurityContext.RunAsGroup = mssqlVersion.Spec.SecurityContext.RunAsUser
+		}
+	}
 }
 
 func (m *MSSQLServer) setDefaultContainerSecurityContext(mssqlVersion *catalog.MSSQLServerVersion, podTemplate *ofst.PodTemplateSpec) {
@@ -464,7 +474,7 @@ func (m *MSSQLServer) assignDefaultContainerSecurityContext(mssqlVersion *catalo
 func (m *MSSQLServer) setDefaultContainerResourceLimits(podTemplate *ofst.PodTemplateSpec) {
 	dbContainer := coreutil.GetContainerByName(podTemplate.Spec.Containers, kubedb.MSSQLContainerName)
 	if dbContainer != nil && (dbContainer.Resources.Requests == nil && dbContainer.Resources.Limits == nil) {
-		apis.SetDefaultResourceLimits(&dbContainer.Resources, kubedb.DefaultResourcesMemoryIntensive)
+		apis.SetDefaultResourceLimits(&dbContainer.Resources, kubedb.DefaultResourcesMemoryIntensiveMSSQLServer)
 	}
 
 	initContainer := coreutil.GetContainerByName(podTemplate.Spec.InitContainers, kubedb.MSSQLInitContainerName)
