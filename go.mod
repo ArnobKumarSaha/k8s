@@ -3,6 +3,7 @@ module github.com/ArnobKumarSaha/k8s
 go 1.23.1
 
 require (
+	go.bytebuilders.dev/catalog v0.0.8
 	gomodules.xyz/jsonpatch/v2 v2.4.0
 	k8s.io/api v0.30.2
 	k8s.io/apimachinery v0.30.2
@@ -95,6 +96,7 @@ require (
 	kmodules.xyz/prober v0.29.0 // indirect
 	kmodules.xyz/resource-metadata v0.18.15 // indirect
 	kubestash.dev/apimachinery v0.13.0 // indirect
+	kubevault.dev/apimachinery v0.18.3 // indirect
 	sigs.k8s.io/gateway-api v1.1.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect

@@ -100,7 +100,6 @@ func CreateOrPatch(ctx context.Context, c client.Client, obj client.Object, tran
 	} else if err != nil {
 		return kutil.VerbUnchanged, err
 	}
-	klog.Infof("Object %v, cur %v \n", obj.GetGeneration(), cur.GetGeneration())
 
 	_, unstructuredObj := obj.(*unstructured.Unstructured)
 
@@ -117,12 +116,10 @@ func CreateOrPatch(ctx context.Context, c client.Client, obj client.Object, tran
 	}
 
 	vt := kutil.VerbUnchanged
-	klog.Infof("Generation : obj-> %v %v , mod-> %v %v , cur-> %v %v \n", obj.GetGeneration(), obj.GetResourceVersion(),
-		mod.GetGeneration(), mod.GetResourceVersion(), cur.GetGeneration(), cur.GetResourceVersion())
 	if cur.GetGeneration() != mod.GetGeneration() {
 		vt = kutil.VerbPatched
-		assign(obj, mod)
 	}
+	assign(obj, mod)
 	return vt, nil
 }
 

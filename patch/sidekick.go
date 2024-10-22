@@ -160,7 +160,7 @@ spec:
     runAsUser: 70
   serviceAccountName: ace-db-sidekick`
 
-func main() {
+func __main() {
 	var cur skapi.Sidekick
 	err := yaml.Unmarshal([]byte(sk), &cur)
 	if err != nil {

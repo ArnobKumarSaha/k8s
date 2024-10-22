@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	bapi "go.bytebuilders.dev/catalog/api/v1alpha1"
 	"gomodules.xyz/jsonpatch/v2"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -32,6 +33,7 @@ func init() {
 	utilruntime.Must(kubedbscheme.AddToScheme(scm))
 	utilruntime.Must(psapi.AddToScheme(scm))
 	utilruntime.Must(skapi.AddToScheme(scm))
+	utilruntime.Must(bapi.AddToScheme(scm))
 }
 
 // var ps = `apiVersion: apps/v1
