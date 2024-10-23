@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"k8s.io/klog/v2"
 
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -179,6 +180,7 @@ func (d *typedClient) Update(ctx context.Context, obj client.Object, opts ...cli
 func (d *typedClient) Patch(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.PatchOption) error {
 	gvk, err := apiutil.GVKForObject(obj, d.c.Scheme())
 	if err != nil {
+		klog.Infof("-------------------------- %v \n", err.Error())
 		return err
 	}
 	if gvk != d.duckGVK {

@@ -83,7 +83,7 @@ func (r *MyPodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 
-	if req.Namespace == "kubedb" && req.Name == "kubedb-kubedb-provisioner" {
+	if req.Namespace == "kube-system" && req.Name == "coredns" {
 		r.tryPatch(&mypod)
 		klog.Infoln("-------------")
 		return ctrl.Result{}, nil
