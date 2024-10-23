@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"k8s.io/klog/v2"
 
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -180,11 +179,15 @@ func (d *typedClient) Update(ctx context.Context, obj client.Object, opts ...cli
 func (d *typedClient) Patch(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.PatchOption) error {
 	gvk, err := apiutil.GVKForObject(obj, d.c.Scheme())
 	if err != nil {
-		klog.Infof("-------------------------- %v \n", err.Error())
 		return err
 	}
 	if gvk != d.duckGVK {
 		return d.c.Patch(ctx, obj, patch, opts...)
+	}
+
+	rawPatch, err := NewRawPatch(obj, patch)
+	if err != nil {
+		return err
 	}
 
 	ll, err := d.c.Scheme().New(d.rawGVK)
@@ -194,8 +197,7 @@ func (d *typedClient) Patch(ctx context.Context, obj client.Object, patch client
 	llo := ll.(client.Object)
 	llo.SetNamespace(obj.GetNamespace())
 	llo.SetName(obj.GetName())
-	llo.SetLabels(obj.GetLabels())
-	return d.c.Patch(ctx, llo, patch, opts...)
+	return d.c.Patch(ctx, llo, rawPatch, opts...)
 }
 
 func (d *typedClient) DeleteAllOf(ctx context.Context, obj client.Object, opts ...client.DeleteAllOfOption) error {
@@ -261,6 +263,11 @@ func (sw *typedStatusWriter) Patch(ctx context.Context, obj client.Object, patch
 		return sw.client.c.Status().Patch(ctx, obj, patch, opts...)
 	}
 
+	rawPatch, err := NewRawPatch(obj, patch)
+	if err != nil {
+		return err
+	}
+
 	ll, err := sw.client.c.Scheme().New(sw.client.rawGVK)
 	if err != nil {
 		return err
@@ -269,7 +276,7 @@ func (sw *typedStatusWriter) Patch(ctx context.Context, obj client.Object, patch
 	llo.SetNamespace(obj.GetNamespace())
 	llo.SetName(obj.GetName())
 	llo.SetLabels(obj.GetLabels())
-	return sw.client.c.Status().Patch(ctx, llo, patch, opts...)
+	return sw.client.c.Status().Patch(ctx, llo, rawPatch, opts...)
 }
 
 func (d *typedClient) SubResource(subResource string) client.SubResourceClient {

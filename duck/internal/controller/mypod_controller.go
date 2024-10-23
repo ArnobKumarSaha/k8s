@@ -18,14 +18,12 @@ package controller
 
 import (
 	"context"
-	"fmt"
-	"gomodules.xyz/jsonpatch/v2"
+	corev1alpha1 "github.com/ArnobKumarSaha/k8s/api/v1alpha1"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/klog/v2"
 	cu "kmodules.xyz/client-go/client"
 	"kmodules.xyz/client-go/client/duck"
@@ -33,9 +31,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"time"
-
-	corev1alpha1 "github.com/ArnobKumarSaha/k8s/api/v1alpha1"
 )
 
 // MyPodReconciler reconciles a MyPod object
@@ -85,7 +80,6 @@ func (r *MyPodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	if req.Namespace == "kube-system" && req.Name == "coredns" {
 		r.tryPatch(&mypod)
-		klog.Infoln("-------------")
 		return ctrl.Result{}, nil
 	}
 
@@ -94,60 +88,54 @@ func (r *MyPodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 func (r *MyPodReconciler) tryPatch(mp *corev1alpha1.MyPod) {
 	_, err := cu.CreateOrPatch(context.TODO(), r.Client, mp, func(object client.Object, createOp bool) client.Object {
-		in := object.(*corev1alpha1.MyPod)
-		controllerutil.AddFinalizer(in, "kubedb.com/finalizer")
-		return in
-	})
-	klog.Errorf("with conversion : %v \n", err)
-
-	_, err = cu.CreateOrPatch(context.TODO(), r.Client, mp, func(object client.Object, createOp bool) client.Object {
 		controllerutil.AddFinalizer(object, "kubedb.com/finalizer")
-		//fmt.Printf("*********** %+v", object)
 		return object
 	})
 	klog.Errorf("direct approach : %v \n", err)
 
-	dep := &apps.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      mp.Name,
-			Namespace: mp.Namespace,
-		},
-	}
-	_, err = cu.CreateOrPatch(context.TODO(), r.Client, dep, func(object client.Object, createOp bool) client.Object {
-		controllerutil.AddFinalizer(object, "kubedb.com/finalizer")
-		return object
-	})
-	klog.Errorf("Try Deployment : %v \n", err)
+	/*
+		dep := &apps.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      mp.Name,
+				Namespace: mp.Namespace,
+			},
+		}
+		_, err = cu.CreateOrPatch(context.TODO(), r.Client, dep, func(object client.Object, createOp bool) client.Object {
+			controllerutil.AddFinalizer(object, "kubedb.com/finalizer")
+			return object
+		})
+		klog.Errorf("Try Deployment : %v \n", err)
 
-	transform := func(obj client.Object, createOp bool) client.Object {
-		controllerutil.AddFinalizer(obj, "kubedb.com/finalizer")
-		return obj
-	}
+		transform := func(obj client.Object, createOp bool) client.Object {
+			controllerutil.AddFinalizer(obj, "kubedb.com/finalizer")
+			return obj
+		}
 
-	patch := client.MergeFrom(mp)
-	mod := transform(mp.DeepCopyObject().(client.Object), false)
+		patch := client.MergeFrom(mp)
+		mod := transform(mp.DeepCopyObject().(client.Object), false)
 
-	data, err := patch.Data(mod)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(string(data))
+		data, err := patch.Data(mod)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(string(data))
 
-	curJson, _ := json.Marshal(mp)
-	modJson, _ := json.Marshal(mod)
-	d2, err := jsonpatch.CreatePatch(curJson, modJson)
-	if err != nil {
-		panic(err)
-	}
-	d2Json, _ := json.Marshal(d2)
-	fmt.Println(string(d2Json))
+		curJson, _ := json.Marshal(mp)
+		modJson, _ := json.Marshal(mod)
+		d2, err := jsonpatch.CreatePatch(curJson, modJson)
+		if err != nil {
+			panic(err)
+		}
+		d2Json, _ := json.Marshal(d2)
+		fmt.Println(string(d2Json))
 
-	// Try patching
-	time.Sleep(time.Second * 2)
-	err = r.Client.Patch(context.TODO(), mod, patch)
-	if err != nil {
-		panic(err)
-	}
+		// Try patching
+		time.Sleep(time.Second * 2)
+		err = r.Client.Patch(context.TODO(), mod, patch)
+		if err != nil {
+			panic(err)
+		}
+	*/
 }
 
 func (r *MyPodReconciler) InjectClient(c client.Client) error {
@@ -161,8 +149,8 @@ func (r *MyPodReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&corev1alpha1.MyPod{}).
 		WithUnderlyingTypes(
 			ObjectOf(apps.SchemeGroupVersion.WithKind("Deployment")),
-			//ObjectOf(apps.SchemeGroupVersion.WithKind("StatefulSet")),
-			//ObjectOf(apps.SchemeGroupVersion.WithKind("DaemonSet")),
+			ObjectOf(apps.SchemeGroupVersion.WithKind("StatefulSet")),
+			ObjectOf(apps.SchemeGroupVersion.WithKind("DaemonSet")),
 		).
 		Complete(func() duck.Reconciler {
 			return new(MyPodReconciler)
