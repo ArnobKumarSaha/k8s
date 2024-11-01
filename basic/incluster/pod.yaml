@@ -1,0 +1,31 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: incluster
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nginx
+  name: nginx
+spec:
+  containers:
+    - image: arnobkumarsaha/incluster
+      name: nginx
+      resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+
+
+#  I1101 14:58:19.839217       1 image.go:40] Starts -> 2024-11-01 14:58:19.839206089 +0000 UTC m=+0.028325609
+#  I1101 14:58:50.411323       1 image.go:45] Time taken -> 30.572105696s, mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04@sha256:c1aa8afe9b06eab64c9774a4802dcd032205d1be785b1fd51e1c0151e7586b74
