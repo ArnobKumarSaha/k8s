@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	vsecretapi "go.virtual-secrets.dev/apimachinery/apis/virtual/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -31,6 +32,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scm))
 	utilruntime.Must(kubedbscheme.AddToScheme(scm))
+	utilruntime.Must(vsecretapi.AddToScheme(scm))
 }
 
 func GetConfig() *rest.Config {
