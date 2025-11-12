@@ -41,6 +41,7 @@ import (
 	core_util "kmodules.xyz/client-go/core/v1"
 	meta_util "kmodules.xyz/client-go/meta"
 	"kmodules.xyz/client-go/policy/secomp"
+	app_api "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 	appcat "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 	mona "kmodules.xyz/monitoring-agent-api/api/v1"
 	ofst "kmodules.xyz/offshoot-api/api/v1"
@@ -436,7 +437,7 @@ func (e *Elasticsearch) SetDefaults(esVersion *catalog.ElasticsearchVersion, top
 	}
 
 	if e.Spec.TerminationPolicy == "" {
-		e.Spec.TerminationPolicy = TerminationPolicyDelete
+		e.Spec.TerminationPolicy = DeletionPolicyDelete
 	}
 
 	if e.Spec.PodTemplate.Spec.ServiceAccountName == "" {
@@ -834,7 +835,8 @@ func (e *Elasticsearch) setDefaultInternalUsersAndRoleMappings(esVersion *catalo
 					userSpec.SecretName = e.DefaultUserCredSecretName(username)
 				}
 				e.Spec.AuthSecret = &SecretReference{
-					LocalObjectReference: core.LocalObjectReference{
+					TypedLocalObjectReference: app_api.TypedLocalObjectReference{
+						Kind: "Secret",
 						Name: userSpec.SecretName,
 					},
 				}

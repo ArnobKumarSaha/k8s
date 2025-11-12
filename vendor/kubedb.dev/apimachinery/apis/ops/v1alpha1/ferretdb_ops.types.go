@@ -64,6 +64,8 @@ type FerretDBOpsRequestSpec struct {
 	VerticalScaling *FerretDBVerticalScalingSpec `json:"verticalScaling,omitempty"`
 	// Specifies information necessary for configuring TLS
 	TLS *FerretDBTLSSpec `json:"tls,omitempty"`
+	// Specifies information necessary for configuring authSecret of the database
+	Authentication *AuthSpec `json:"authentication,omitempty"`
 	// Specifies information necessary for restarting database
 	Restart *RestartSpec `json:"restart,omitempty"`
 	// Timeout for each step of the ops request in second. If a step doesn't finish within the specified timeout, the ops request will result in failure.
@@ -85,8 +87,8 @@ type FerretDBTLSSpec struct {
 	ClientAuthMode v1alpha2.ClusterAuthMode `json:"clientAuthMode,omitempty"`
 }
 
-// +kubebuilder:validation:Enum=UpdateVersion;VerticalScaling;Restart;HorizontalScaling;ReconfigureTLS
-// ENUM(UpdateVersion, Restart, VerticalScaling, HorizontalScaling, ReconfigureTLS)
+// +kubebuilder:validation:Enum=UpdateVersion;VerticalScaling;Restart;HorizontalScaling;ReconfigureTLS;RotateAuth
+// ENUM(UpdateVersion, Restart, VerticalScaling, HorizontalScaling, ReconfigureTLS, RotateAuth)
 type FerretDBOpsRequestType string
 
 // FerretDBUpdateVersionSpec contains the update version information of a ferretdb cluster
@@ -97,14 +99,18 @@ type FerretDBUpdateVersionSpec struct {
 
 // FerretDBHorizontalScalingSpec contains the horizontal scaling information of a FerretDB cluster
 type FerretDBHorizontalScalingSpec struct {
-	// Number of node
-	Node *int32 `json:"node,omitempty"`
+	Primary   *FerretDBHorizontalScalingReplicas `json:"primary,omitempty"`
+	Secondary *FerretDBHorizontalScalingReplicas `json:"secondary,omitempty"`
+}
+
+type FerretDBHorizontalScalingReplicas struct {
+	Replicas *int32 `json:"replicas,omitempty"`
 }
 
 // FerretDBVerticalScalingSpec contains the vertical scaling information of a FerretDB cluster
 type FerretDBVerticalScalingSpec struct {
-	// Resource spec for nodes
-	Node *PodResources `json:"node,omitempty"`
+	Primary   *PodResources `json:"primary,omitempty"`
+	Secondary *PodResources `json:"secondary,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
